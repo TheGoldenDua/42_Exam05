@@ -1,4 +1,3 @@
-
 #include "searchable_bag.hpp"
 #include "tree_bag.hpp"
 

@@ -9,7 +9,7 @@ class bigint
         std::string addStrs(const std::string& a, const std::string& b) const;
         bool isZero() const;
         void removeZeros();
-        bool isNumeric(const std::string& s) const;
+        bool checkDigits(const std::string& s) const;
         
     public:
         bigint();

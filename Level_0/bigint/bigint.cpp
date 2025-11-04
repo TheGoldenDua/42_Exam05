@@ -1,10 +1,8 @@
 #include "bigint.hpp"
 #include <sstream>
-#include <cctype>
 #include <algorithm>
-#include <vector>
 
-bigint::bigint() : digits("0"){}
+bigint::bigint() : digits("0") {}
 
 bigint::bigint(unsigned int nbr)
 {
@@ -13,32 +11,19 @@ bigint::bigint(unsigned int nbr)
         digits = "0";
         return ;
     }
-
-    std::ostringstream oss;
-    oss << nbr;
-    digits = oss.str();
-    std::reverse(digits.begin(), digits.end());
-}
-
-bool bigint::isNumeric(const std::string& s) const
-{
-    if(s.empty())
-        return false;
-    for (int i = 0; i < (int)s.size(); i++)
+    else
     {
-        if(!isdigit(s[i]))
-            return false;
+        std::ostringstream oss;
+        oss << nbr;
+        digits = oss.str();
+        std::reverse(digits.begin(), digits.end());
     }
-    return true;
 }
 
 bigint::bigint(const std::string& nbr)
 {
-    if(!isNumeric(nbr))
-    {
+    if(!checkDigits(nbr))
         digits = "0";
-        return;
-    }
     else
     {
         digits = nbr;
@@ -47,37 +32,17 @@ bigint::bigint(const std::string& nbr)
     }
 }
 
-std::string bigint::addStrs(const std::string& a, const std::string& b) const
+bool bigint::checkDigits(const std::string& s) const
 {
-    int carry = 0;
-    std::string res;
-    int len = std::max(a.size(),  b.size());
-
-    for (int i = 0; i < len || carry; i++)
-    {
-        int digitA = (i < (int) a.size())? (a[i] - '0') : 0;
-        int digitB = (i < (int) b.size()) ? (b[i] - '0') : 0;
-        int sum = digitA + digitB + carry;
-
-        res.push_back((sum % 10) + '0');
-        carry = sum / 10;
-    }
-    return res;   
-}
-
-void bigint::removeZeros()
-{
-    if (digits.empty())
-    {
-        digits = "0";
-        return;
-    }
+    if(s.empty())
+        return false;
     
-    int i = digits.size() - 1;
-
-    while(i > 1 && digits[i] == '0')
-        i--;
-    digits = digits.substr(0, i + 1);
+    for (int i = 0; i < (int)s.size(); i++)
+    {
+        if(!isdigit(s[i]))
+            return false;
+    }
+    return true;
 }
 
 bool bigint::isZero() const
@@ -85,31 +50,49 @@ bool bigint::isZero() const
     return digits == "0";
 }
 
-std::string bigint::getDigits() const
+void bigint::removeZeros()
 {
-    return digits;
+    if(digits.empty())
+    {
+        digits = "0";
+        return ;
+    }
+
+    int i = digits.size() - 1;
+    while(i > 1 && digits[i] == '0')
+        i--;
+    digits = digits.substr(0, i+1);
 }
 
-std::ostream& operator<<(std::ostream& out, const bigint& nbr)
+std::string bigint::addStrs(const std::string& a, const std::string& b) const
 {
-    std::string str(nbr.getDigits());
-    std::reverse(str.begin(), str.end());
-    out << str;
-    return out;
+    std::string res;
+    int carry = 0;
+    int len = std::max(a.size(), b.size());
+
+    for (int i = 0; i < len || carry; i++)
+    {
+        int digitA = i < (int) a.size() ? a[i] - '0' : 0;
+        int digitB = i < (int) b.size() ? b[i] - '0' : 0;
+        int sum = digitA + digitB + carry;
+
+        res.push_back((sum % 10) + '0');
+        carry = sum / 10;
+    }
+    return res;
 }
 
 bigint bigint::operator+(const bigint& other) const
 {
-    bigint res;
-
-    res.digits = addStrs(this->digits, other.digits);
+    bigint res = *this;
+    res.digits = addStrs(digits, other.digits);
     res.removeZeros();
     return res;
 }
 
 bigint& bigint::operator+=(const bigint& other)
 {
-    digits = addStrs(this->digits, other.digits);
+    digits = addStrs(digits, other.digits);
     removeZeros();
     return *this;
 }
@@ -120,14 +103,13 @@ bool bigint::operator==(const bigint& other) const
 
     a.removeZeros();
     b.removeZeros();
-    return (a.digits == b.digits);
+    return a.digits == b.digits;
 }
 
 bool bigint::operator!=(const bigint& other) const
 {
-    return !(other == *this);
+    return !(*this == other);
 }
-
 
 bool bigint::operator<(const bigint& other) const
 {
@@ -152,26 +134,25 @@ bool bigint::operator>(const bigint& other) const
     return other < *this;
 }
 
-bool bigint::operator>=(const bigint& other) const
-{
-    return !(*this < other);
-}
-
 bool bigint::operator<=(const bigint& other) const
 {
     return !(*this > other);
 }
 
+bool bigint::operator>=(const bigint& other) const
+{
+    return !(*this < other);
+}
+
 bigint bigint::operator<<(unsigned int shift) const
-{   
+{
     if(isZero() || shift == 0)
         return *this;
-
     bigint res = *this;
     res.digits.insert(res.digits.begin(), shift, '0');
     res.removeZeros();
     return res;
-}   
+}
 
 bigint bigint::operator>>(unsigned int shift) const
 {
@@ -189,33 +170,30 @@ bigint bigint::operator>>(unsigned int shift) const
 
 bigint& bigint::operator<<=(unsigned int shift)
 {
-    *this = (*this) << shift;
+    *this = *this << shift;
     return *this;
 }
 
 bigint& bigint::operator>>=(unsigned int shift)
 {
-    *this = (*this) >> shift;
+    *this = *this >> shift;
     return *this;
 }
 
 bigint& bigint::operator<<=(const bigint& shift)
 {
-    // get digits from shift bigint (reversed)
     std::string str = shift.getDigits();
     std::reverse(str.begin(), str.end());
 
-    // safety: if not numeric or empty, do nothing
-    if (!isNumeric(str))
+    if(!checkDigits(str))
         return *this;
 
-    // convert to unsigned int
     unsigned int s = 0;
-    for (int i = 0; i < (int)str.size(); i++)
-        s = s * 10 + (str[i] - '0');
-
-    // reuse existing shift logic
-    *this = (*this) << s;
+    for (int i = 0; i < (int) str.size(); i++)
+    {
+        s = s * 10 + str[i] - '0';
+    }
+    *this = *this << s;
     return *this;
 }
 
@@ -224,29 +202,40 @@ bigint& bigint::operator>>=(const bigint& shift)
     std::string str = shift.getDigits();
     std::reverse(str.begin(), str.end());
 
-    if (!isNumeric(str))
+    if(!checkDigits(str))
         return *this;
-
+    
     unsigned int s = 0;
-    for (int i = 0; i < (int)str.size(); i++)
+    for (int i = 0; i < (int) str.size(); i++)
+    {
         s = s * 10 + (str[i] - '0');
-
-    *this = (*this) >> s;
+    }
+    *this = *this >> s;
     return *this;
-}
-
-
-
-bigint bigint::operator++(int)
-{
-    bigint res = *this;
-
-    *this += bigint(1);
-    return res;
 }
 
 bigint& bigint::operator++()
 {
     *this += bigint(1);
     return *this;
+}
+
+bigint bigint::operator++(int)
+{
+    bigint res = *this;
+    *this += bigint(1);
+    return res;
+}
+
+std::string bigint::getDigits() const
+{
+    return digits;
+}
+
+std::ostream& operator<<(std::ostream& out, const bigint& nbr)
+{
+    std::string str(nbr.getDigits());
+    std::reverse(str.begin(), str.end());
+    out << str;
+    return out;
 }

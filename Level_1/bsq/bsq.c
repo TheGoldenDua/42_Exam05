@@ -84,7 +84,7 @@ void close_on_error(t_bsq *bsq, char *av, FILE *file, int i, char *line)
 {
 	if (line)
 		free(line);
-	if (av) // only close file if it's not stdin
+	if (av)
 		fclose(file);
 	fputs(ERROR, stdout);
 	if (i >= 0)
